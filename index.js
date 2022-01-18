@@ -6,10 +6,10 @@ require("dotenv").config();
 const x = process.env.PORT;
 const port = parseInt(x);
 
-const checkLogin = require("./middleware/checkLogin");
-
 const users = require("./route/users");
 const blogs = require("./route/blogs");
+const token = require("./route/token");
+const checkLogin = require("./middleware/checkLogin");
 
 const app = express();
 
@@ -26,6 +26,7 @@ fs.exists(dir, function (exists) {
 
 app.use("/users", users);
 app.use("/blogs", blogs);
+app.use("/token", token);
 
 app.use("/image", checkLogin, express.static(__dirname + "/uploads"));
 
@@ -38,5 +39,5 @@ const errorHandler = (err, req, res, next) => {
 };
 app.use(errorHandler);
 app.listen(port, () => {
-  console.log(`Example app listening at http://localhost:${port}`);
+  console.log(` app listening at http://localhost:${port}`);
 });
