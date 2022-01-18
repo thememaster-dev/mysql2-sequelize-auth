@@ -1,5 +1,6 @@
 const express = require("express");
 const fs = require("fs");
+const cors = require('cors')
 
 require("dotenv").config();
 const x = process.env.PORT;
@@ -12,6 +13,7 @@ const blogs = require("./route/blogs");
 
 const app = express();
 
+app.use(cors())
 app.use(express.json());
 
 const dir = "uploads";
