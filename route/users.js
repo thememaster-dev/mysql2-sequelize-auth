@@ -6,6 +6,7 @@ const jwt = require("jsonwebtoken");
 
 const sequelize = require("../util/database");
 const User = require("../models/user");
+const checkLogin = require("../middleware/checkLogin");
 
 //-------------------------------------------------------signup
 router.post("/signup", async (req, res) => {
@@ -62,40 +63,47 @@ router.post("/login", async (req, res) => {
     const temUserName = req.body.name;
 
     const temUserPass = req.body.password;
-    sequelize.sync().then(async () => {
-      const isExist = await User.findOne({
-        where: { name: temUserName },
-      });
-      if (isExist) {
-        const isValidPassword = bcrypt.compareSync(
-          temUserPass,
-          isExist.password
-        );
-        if (isValidPassword) {
-          //..................generate token
-          const token = jwt.sign(
-            {
-              username: isExist.name,
-              userId: isExist.id,
-            },
-            process.env.JWT_SECRET,
-            { expiresIn: "24h" }
+
+    if (temUserName && temUserPass) {
+      sequelize.sync().then(async () => {
+        const isExist = await User.findOne({
+          where: { name: temUserName },
+        });
+        if (isExist) {
+          const isValidPassword = bcrypt.compareSync(
+            temUserPass,
+            isExist.password
           );
-          res.status(200).json({
-            access_token: token,
-            message: "Login successful!",
-          });
+          if (isValidPassword) {
+            //..................generate token
+            const token = jwt.sign(
+              {
+                username: isExist.name,
+                userId: isExist.id,
+              },
+              process.env.JWT_SECRET,
+              { expiresIn: "24h" }
+            );
+            res.status(200).json({
+              access_token: token,
+              message: "Login successful!",
+            });
+          } else {
+            res.status(401).json({
+              error: "User name and password did not match",
+            });
+          }
         } else {
           res.status(401).json({
-            error: "User name and password did not match",
+            error: "This user name is not signed up ",
           });
         }
-      } else {
-        res.status(401).json({
-          error: "This user name is not signed up ",
-        });
-      }
-    });
+      });
+    } else {
+      res.status(401).json({
+        error: "enter name and password ",
+      });
+    }
   } catch {
     res.status(500).json({
       error: "Authentication failed",
@@ -103,7 +111,7 @@ router.post("/login", async (req, res) => {
   }
 });
 
-router.get("/all", async (req, res) => {
+router.get("/all", checkLogin, async (req, res) => {
   try {
     sequelize.sync().then(async () => {
       const allUser = await User.findAll();
